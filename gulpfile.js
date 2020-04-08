@@ -1,43 +1,66 @@
 'use strict';
  
-const { src, dest, parallel } = require('gulp');
+const { src, dest, series } = require('gulp');
 const sass = require('gulp-sass');
-const babel = require('gulp-babel');
-const plumber = require('gulp-plumber');
 const concat = require('gulp-concat');
+const clean = require('gulp-clean');
+const browserify = require('browserify');
+const babelify = require('babelify');
+const source = require('vinyl-source-stream');
+const buffer = require('vinyl-buffer');
 const uglify = require('gulp-uglify');
+const sourcemaps = require('gulp-sourcemaps');
+const rename = require('gulp-rename');
+sass.compiler = require('node-sass');
+
+const destFolder = 'build/';
+const jsFolder = 'src/js/';
+const jsFiles = [
+//  'node_modules/jquery/dist/jquery.min.js',
+//  'node_modules/bootstrap/dist/js/bootstrap.min.js', 
+  'main.js'
+];
+ 
+function cleanLocal() {
+  return src('build', {read: false, allowEmpty: true})
+    .pipe(clean());
+}
 
 
 function php() {
   return src('src/**/*.php')
-    .pipe(dest('build/'));
+    .pipe(dest(destFolder));
 }
 
 
-function js() {
-    return src('./src/**/*.js')
-    .pipe(plumber())
-    .pipe(babel({
-      presets: [
-        ['@babel/env', {
-          modules: false
-        }]
-      ]
-    }))
-    .pipe(concat('app.js'))
+function js(cb) {
+  jsFiles.map(function(entry){
+    return browserify({
+      entries: [jsFolder + entry]
+    })
+    .transform(babelify, {presets: ['env']})
+    .bundle()
+    .pipe(source(entry))
+    .pipe(rename({extname: '.min.js'}))
+    .pipe(buffer())
+    .pipe(sourcemaps.init({loadMaps: true}))
     .pipe(uglify())
-    .pipe(dest('./build/js/'));
+    .pipe(sourcemaps.write('./'))
+    .pipe(dest(destFolder + '/js/'))
+  });
+  cb();
 }
 
 
 function style() {
-    return src("src/styles/**/*.scss")
-        .pipe(sass())
-        .on("error", sass.logError)
-        .pipe(dest("build/css/"));
+    return src(['node_modules/bootstrap/dist/css/bootstrap.min.css', 'src/styles/**/*.sass'])
+        .pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError))
+        .pipe(concat('app.css'))
+        .pipe(dest(destFolder + "css/"));
 }
  
 exports.js = js;
 exports.style = style;
 exports.php = php;
-exports.default = parallel(js, style, php);
+exports.clean = cleanLocal;
+exports.default = series(cleanLocal, js, style, php);
