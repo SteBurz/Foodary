@@ -17,8 +17,11 @@ error_reporting(E_ALL); ?>
             <div class="row">
                 <?php 
                     require 'functions/components/Actions.php';
+                    require 'functions/components/Forms.php';
+                    $action = new Actions;
+                    $forms = new Forms;
 
-                    $form = "<h1>Test</h1>";
+                    $form = $forms->getNewRecipeForm();
                     $newRecipe = (object) [
                         "buttonName" => "New recipe",
                         "modal" => (object) [
@@ -28,7 +31,6 @@ error_reporting(E_ALL); ?>
                             "buttonName" => "Create recipe"
                         ]
                     ];
-                    $action = new Actions;
                     $action->addButtonWithModal($newRecipe);
                 ?>
             </div>
