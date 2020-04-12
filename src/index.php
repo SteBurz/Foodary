@@ -1,7 +1,9 @@
 <?php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
-error_reporting(E_ALL); ?>
+error_reporting(E_ALL); 
+require 'manager.php';
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -16,12 +18,9 @@ error_reporting(E_ALL); ?>
         <div class="container">
             <div class="row">
                 <?php 
-                    require 'functions/components/Actions.php';
-                    require 'functions/components/Forms.php';
                     $action = new Actions;
-                    $forms = new Forms;
 
-                    $form = $forms->getNewRecipeForm();
+                    $form = $action->getNewRecipeForm();
                     $newRecipe = (object) [
                         "buttonName" => "New recipe",
                         "modal" => (object) [
